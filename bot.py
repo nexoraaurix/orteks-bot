@@ -4,35 +4,37 @@ from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, ReplyKey
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
+from aiohttp import web
+import os
 
 # ===== НАСТРОЙКИ =====
 BOT_TOKEN = "8589282060:AAElMSQcx9sdr4RjisTKuu2mNsl_XbmbSjA"
-ADMIN_CHAT_ID = 5187923987  
- 
+ADMIN_CHAT_ID = 5187923987
+
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
- 
+
 # ===== СОСТОЯНИЯ =====
 class Form(StatesGroup):
-     name = State()
-     phone = State()
-     service = State()
-     time = State()
-     confirm = State()
-     
+    name = State()
+    phone = State()
+    service = State()
+    time = State()
+    confirm = State()
+
 # ===== КЛАВИАТУРЫ =====
 def main_menu():
-     kb = ReplyKeyboardMarkup(
-         keyboard=[
-             [KeyboardButton(text="🦷 Записатися на прийом")],
-             [KeyboardButton(text="💰 Ціни та послуги")],
-             [KeyboardButton(text="📍 Адреса та графік")],
-             [KeyboardButton(text="📞 Зв'язатися з адміністратором")],
-         ],
-         resize_keyboard=True
-     )
-     return kb
- 
+    kb = ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="🦷 Записатися на прийом")],
+            [KeyboardButton(text="💰 Ціни та послуги")],
+            [KeyboardButton(text="📍 Адреса та графік")],
+            [KeyboardButton(text="📞 Зв'язатися з адміністратором")],
+        ],
+        resize_keyboard=True
+    )
+    return kb
+
 def services_menu():
     kb = ReplyKeyboardMarkup(
         keyboard=[
@@ -231,7 +233,20 @@ async def unknown(message: Message):
 # ===== ЗАПУСК =====
 async def main():
     print("Бот запущен...")
+    
+    # Фейковый веб-сервер для Render (чтобы он видел открытый порт)
+    app = web.Application()
+    app.router.add_get("/", lambda r: web.Response(text="Bot is alive!"))
+    runner = web.AppRunner(app)
+    await runner.setup()
+    port = int(os.environ.get("PORT", 10000))
+    site = web.TCPSite(runner, '0.0.0.0', port)
+    await site.start()
+    
+    # Сам бот
     await dp.start_polling(bot)
 
+if __name__ == "__main__":
+    asyncio.run(main())
 if __name__ == "__main__":
     asyncio.run(main())
